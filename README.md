@@ -145,7 +145,7 @@ A classe `TariffCalculationService` e responsavel por todo o calculo. O fluxo fu
 
 **1. Buscar a tabela vigente**
 
-O metodo `findCurrentTable()` consulta o repositorio passando `LocalDate.now()` e retorna a primeira tabela cuja vigencia (`validFrom` / `validTo`) cobre a data atual. Se nenhuma tabela for encontrada, retorna erro 422.
+O metodo `findCurrentTable()` consulta o repositorio passando `LocalDate.now()` e retorna a primeira tabela cuja vigencia (`validFrom` / `validTo`) cobre a data atual e ignorando as que possuem deletedAt. Se nenhuma tabela for encontrada, retorna erro 422.
 
 **2. Localizar a categoria**
 
