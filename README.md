@@ -24,7 +24,7 @@ API REST para gerenciamento de tabelas tarifarias de agua e calculo de consumo p
 | PostgreSQL | 15+     |
 | Maven      | 3.9+    |
 
-> O projeto inclui o Maven Wrapper (`./mvnw`), entao nao e necessario ter o Maven instalado.
+O projeto inclui o Maven Wrapper (`./mvnw`), entao nao e necessario ter o Maven instalado.
 
 ## Configuracao do banco de dados
 
@@ -79,7 +79,7 @@ Repository          -> Acesso ao banco de dados via Spring Data JPA
 
 **Decisoes de design:**
 
-- **Rich Domain Model**: as entidades possuem comportamento proprio (ex: `TariffTable.addCategory()`, `TariffTable.markAsDeleted()`). A logica de dominio fica nas entidades, nao nos services.
+- **Rich Domain Model**: as entidades possuem comportamento proprio (ex: TariffTable.addCategory(), TariffTable.markAsDeleted()). A logica de dominio fica nas entidades, nao nos services.
 - **Validacao dedicada**: o `TariffTableValidator` centraliza todas as regras de validacao da tabela tarifaria (continuidade das faixas, categorias obrigatorias, vigencia).
 - **Soft delete**: tabelas tarifarias nao sao removidas fisicamente do banco. Sao marcadas com status `DELETED` e `deletedAt`, preservando o historico.
 - **Migrations com Flyway**: o schema do banco e versionado e evolui de forma controlada.
