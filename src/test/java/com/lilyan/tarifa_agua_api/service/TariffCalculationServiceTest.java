@@ -40,21 +40,21 @@ class TariffCalculationServiceTest {
         when(tariffTableRepository.findValidTables(any(LocalDate.class)))
                 .thenReturn(List.of(tabela));
 
-        CalculationResponse resp = service.calculate(request(ConsumerCategory.INDUSTRIAL, 18));
+        CalculationResponse resp = service.calculate(new CreateCalculationRequest(ConsumerCategory.INDUSTRIAL, 18));
 
-        assertEquals(ConsumerCategory.INDUSTRIAL, resp.getCategoria());
-        assertEquals(18, resp.getConsumoTotal());
-        assertEquals(0, new BigDecimal("26.00").compareTo(resp.getValorTotal()));
+        assertEquals(ConsumerCategory.INDUSTRIAL, resp.categoria());
+        assertEquals(18, resp.consumoTotal());
+        assertEquals(0, new BigDecimal("26.00").compareTo(resp.valorTotal()));
 
-        assertEquals(2, resp.getDetalhamento().size());
+        assertEquals(2, resp.detalhamento().size());
 
-        CalculationResponse.RangeBreakdown faixa1 = resp.getDetalhamento().get(0);
-        assertEquals(10, faixa1.getM3Cobrados());
-        assertEquals(0, new BigDecimal("10.00").compareTo(faixa1.getSubtotal()));
+        CalculationResponse.RangeBreakdown faixa1 = resp.detalhamento().get(0);
+        assertEquals(10, faixa1.m3Cobrados());
+        assertEquals(0, new BigDecimal("10.00").compareTo(faixa1.subtotal()));
 
-        CalculationResponse.RangeBreakdown faixa2 = resp.getDetalhamento().get(1);
-        assertEquals(8, faixa2.getM3Cobrados());
-        assertEquals(0, new BigDecimal("16.00").compareTo(faixa2.getSubtotal()));
+        CalculationResponse.RangeBreakdown faixa2 = resp.detalhamento().get(1);
+        assertEquals(8, faixa2.m3Cobrados());
+        assertEquals(0, new BigDecimal("16.00").compareTo(faixa2.subtotal()));
     }
 
     @Test
@@ -66,11 +66,11 @@ class TariffCalculationServiceTest {
         when(tariffTableRepository.findValidTables(any(LocalDate.class)))
                 .thenReturn(List.of(tabela));
 
-        CalculationResponse resp = service.calculate(request(ConsumerCategory.PARTICULAR, 7));
+        CalculationResponse resp = service.calculate(new CreateCalculationRequest(ConsumerCategory.PARTICULAR, 7));
 
-        assertEquals(0, new BigDecimal("21.00").compareTo(resp.getValorTotal()));
-        assertEquals(1, resp.getDetalhamento().size());
-        assertEquals(7, resp.getDetalhamento().get(0).getM3Cobrados());
+        assertEquals(0, new BigDecimal("21.00").compareTo(resp.valorTotal()));
+        assertEquals(1, resp.detalhamento().size());
+        assertEquals(7, resp.detalhamento().get(0).m3Cobrados());
     }
 
     @Test
@@ -82,10 +82,10 @@ class TariffCalculationServiceTest {
         when(tariffTableRepository.findValidTables(any(LocalDate.class)))
                 .thenReturn(List.of(tabela));
 
-        CalculationResponse resp = service.calculate(request(ConsumerCategory.COMERCIAL, 10));
+        CalculationResponse resp = service.calculate(new CreateCalculationRequest(ConsumerCategory.COMERCIAL, 10));
 
-        assertEquals(0, new BigDecimal("20.00").compareTo(resp.getValorTotal()));
-        assertEquals(1, resp.getDetalhamento().size());
+        assertEquals(0, new BigDecimal("20.00").compareTo(resp.valorTotal()));
+        assertEquals(1, resp.detalhamento().size());
     }
 
     @Test
@@ -99,10 +99,10 @@ class TariffCalculationServiceTest {
                 .thenReturn(List.of(tabela));
 
         // consumo 25: 10x1 + 10x2 + 5x3 = 10 + 20 + 15 = 45
-        CalculationResponse resp = service.calculate(request(ConsumerCategory.PUBLICO, 25));
+        CalculationResponse resp = service.calculate(new CreateCalculationRequest(ConsumerCategory.PUBLICO, 25));
 
-        assertEquals(0, new BigDecimal("45.00").compareTo(resp.getValorTotal()));
-        assertEquals(3, resp.getDetalhamento().size());
+        assertEquals(0, new BigDecimal("45.00").compareTo(resp.valorTotal()));
+        assertEquals(3, resp.detalhamento().size());
     }
 
     @Test
@@ -111,7 +111,7 @@ class TariffCalculationServiceTest {
                 .thenReturn(List.of());
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> service.calculate(request(ConsumerCategory.INDUSTRIAL, 10)));
+                () -> service.calculate(new CreateCalculationRequest(ConsumerCategory.INDUSTRIAL, 10)));
 
         assertTrue(ex.getReason().contains("tabela tarifária vigente"));
     }
@@ -126,7 +126,7 @@ class TariffCalculationServiceTest {
                 .thenReturn(List.of(tabela));
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> service.calculate(request(ConsumerCategory.INDUSTRIAL, 10)));
+                () -> service.calculate(new CreateCalculationRequest(ConsumerCategory.INDUSTRIAL, 10)));
 
         assertTrue(ex.getReason().contains("categoria informada"));
     }
@@ -140,20 +140,12 @@ class TariffCalculationServiceTest {
                 .thenReturn(List.of(tabela));
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> service.calculate(request(ConsumerCategory.INDUSTRIAL, 15)));
+                () -> service.calculate(new CreateCalculationRequest(ConsumerCategory.INDUSTRIAL, 15)));
 
         assertTrue(ex.getReason().contains("não cobrem"));
     }
 
     // métodos utilizados nos testes
-
-    private CreateCalculationRequest request(ConsumerCategory cat, int consumo) {
-        CreateCalculationRequest req = new CreateCalculationRequest();
-        req.setCategoria(cat);
-        req.setConsumo(consumo);
-        return req;
-    }
-
 
     private TariffTable buildTabela(ConsumerCategory categoria, Object... faixas) {
         TariffTable tabela = new TariffTable("Teste", null, null);

@@ -31,19 +31,19 @@ public class TariffTableService {
         validator.validate(request);
 
         TariffTable table = new TariffTable(
-                request.getName(),
-                request.getValidFrom(),
-                request.getValidTo()
+                request.name(),
+                request.validFrom(),
+                request.validTo()
         );
 
-        for (CategoryRangesRequest c : request.getCategories()) {
-            TariffCategory category = table.addCategory(c.getCategory());
+        for (CategoryRangesRequest c : request.categories()) {
+            TariffCategory category = table.addCategory(c.category());
 
-            List<RangeRequest> sortedRanges = new ArrayList<>(c.getRanges());
-            sortedRanges.sort(Comparator.comparingInt(RangeRequest::getStart));
+            List<RangeRequest> sortedRanges = new ArrayList<>(c.ranges());
+            sortedRanges.sort(Comparator.comparingInt(RangeRequest::start));
 
             for (RangeRequest r : sortedRanges) {
-                category.addRange(r.getStart(), r.getEnd(), r.getUnitPrice());
+                category.addRange(r.start(), r.end(), r.unitPrice());
             }
         }
 

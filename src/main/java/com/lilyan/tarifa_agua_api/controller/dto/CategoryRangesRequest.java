@@ -7,18 +7,7 @@ import jakarta.validation.constraints.NotEmpty;
 
 import java.util.List;
 
-public class CategoryRangesRequest {
-
-    @NotNull
-    private ConsumerCategory category;
-
-    @Valid
-    @NotEmpty
-    private List<RangeRequest> ranges;
-
-    public ConsumerCategory getCategory() { return category; }
-    public void setCategory(ConsumerCategory category) { this.category = category; }
-
-    public List<RangeRequest> getRanges() { return ranges; }
-    public void setRanges(List<RangeRequest> ranges) { this.ranges = ranges; }
-}
+public record CategoryRangesRequest(
+        @NotNull ConsumerCategory category,
+        @Valid @NotEmpty List<RangeRequest> ranges
+) {}

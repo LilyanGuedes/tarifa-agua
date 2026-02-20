@@ -163,21 +163,21 @@ Para cada faixa (ordenada por inicio):
   |
   |-- Se restante <= 0, para
   |
-  |-- Calcula quantos m3 cabem nessa faixa:
-  |     maxCobravel = fim - inicioEfetivo + 1
-  |     m3Cobrados  = min(restante, maxCobravel)
+  |-- Calcula a capacidade da faixa:
+  |     capacidade = fim - inicio + 1  (ou apenas fim, se inicio == 0)
   |
-  |-- Calcula o subtotal:
-  |     subtotal = m3Cobrados x valorUnitario
+  |-- Calcula quantos m3 sao cobrados:
+  |     m3Cobrados = min(restante, capacidade)
   |
-  |-- Acumula no total e desconta do restante:
+  |-- Calcula o subtotal e desconta do restante:
+        subtotal  = m3Cobrados x valorUnitario
         total    += subtotal
         restante -= m3Cobrados
 ```
 
-A faixa `0..10` é tratada de forma especial: como o inicio é 0, mas a cobranca comeca a partir do 1o m3, o codigo ajusta o `inicioCobrancaDaFaixa` para 1 quando `start == 0`. Isso garante que a faixa 0-10 cobre exatamente 10 unidades.
+A faixa `0..10` e tratada de forma especial: a capacidade e `fim` (10) em vez de `fim - inicio + 1` (11), porque o 0 nao representa um m3 consumido. Isso garante que a faixa 0-10 cobre exatamente 10 unidades.
 
-**5. Montar a resposta com detalhamento**
+**4. Montar a resposta com detalhamento**
 
 A cada faixa processada, um `RangeBreakdown` e adicionado ao detalhamento, contendo a faixa, os m3 cobrados, o valor unitario e o subtotal. O consumidor recebe a conta total e a discriminacao completa de como o valor foi calculado.
 
@@ -188,11 +188,11 @@ Categoria **INDUSTRIAL**, faixas `0-10 @ R$1,00` e `11-20 @ R$2,00`, consumo de 
 ```
 restante = 18
 
-Faixa 0-10:  maxCobravel = 10, m3Cobrados = 10
+Faixa 0-10:  capacidade = 10, m3Cobrados = min(18, 10) = 10
              subtotal = 10 x R$ 1,00 = R$ 10,00
              restante = 18 - 10 = 8
 
-Faixa 11-20: maxCobravel = 10, m3Cobrados = 8
+Faixa 11-20: capacidade = 10, m3Cobrados = min(8, 10) = 8
              subtotal = 8 x R$ 2,00  = R$ 16,00
              restante = 8 - 8 = 0
 
@@ -220,7 +220,7 @@ Cria uma nova tabela tarifaria. Deve conter as 4 categorias obrigatorias.
       "ranges": [
         { "start": 0,  "end": 10,    "unitPrice": 2.50 },
         { "start": 11, "end": 20,    "unitPrice": 4.00 },
-        { "start": 21, "end": 99999, "unitPrice": 6.00 }
+        { "start": 21, "end": 999999, "unitPrice": 6.00 }
       ]
     },
     {
@@ -228,7 +228,7 @@ Cria uma nova tabela tarifaria. Deve conter as 4 categorias obrigatorias.
       "ranges": [
         { "start": 0,  "end": 10,    "unitPrice": 3.00 },
         { "start": 11, "end": 20,    "unitPrice": 5.00 },
-        { "start": 21, "end": 99999, "unitPrice": 7.50 }
+        { "start": 21, "end": 999999, "unitPrice": 7.50 }
       ]
     },
     {
@@ -236,7 +236,7 @@ Cria uma nova tabela tarifaria. Deve conter as 4 categorias obrigatorias.
       "ranges": [
         { "start": 0,  "end": 10,    "unitPrice": 4.00 },
         { "start": 11, "end": 20,    "unitPrice": 6.50 },
-        { "start": 21, "end": 99999, "unitPrice": 9.00 }
+        { "start": 21, "end": 999999, "unitPrice": 9.00 }
       ]
     },
     {
@@ -244,7 +244,7 @@ Cria uma nova tabela tarifaria. Deve conter as 4 categorias obrigatorias.
       "ranges": [
         { "start": 0,  "end": 10,    "unitPrice": 1.50 },
         { "start": 11, "end": 20,    "unitPrice": 2.50 },
-        { "start": 21, "end": 99999, "unitPrice": 4.00 }
+        { "start": 21, "end": 999999, "unitPrice": 4.00 }
       ]
     }
   ]
@@ -279,7 +279,7 @@ Lista todas as tabelas tarifarias ativas com suas categorias e faixas.
         "ranges": [
           { "start": 0,  "end": 10,    "unitPrice": 2.50 },
           { "start": 11, "end": 20,    "unitPrice": 4.00 },
-          { "start": 21, "end": 99999, "unitPrice": 6.00 }
+          { "start": 21, "end": 999999, "unitPrice": 6.00 }
         ]
       }
     ]

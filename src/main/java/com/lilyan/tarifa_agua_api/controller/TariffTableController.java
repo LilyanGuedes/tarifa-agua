@@ -2,15 +2,12 @@ package com.lilyan.tarifa_agua_api.controller;
 
 import com.lilyan.tarifa_agua_api.controller.dto.CreateTariffTableRequest;
 import com.lilyan.tarifa_agua_api.controller.dto.TariffTableResponse;
-import com.lilyan.tarifa_agua_api.domain.model.ConsumptionRange;
-import com.lilyan.tarifa_agua_api.domain.model.TariffCategory;
 import com.lilyan.tarifa_agua_api.domain.model.TariffTable;
 import com.lilyan.tarifa_agua_api.service.TariffTableService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -34,44 +31,9 @@ public class TariffTableController {
 
     @GetMapping
     public List<TariffTableResponse> list() {
-
-        List<TariffTable> tables = tariffTableService.findAll();
-        List<TariffTableResponse> response = new ArrayList<>();
-
-        for (TariffTable table : tables) {
-
-            TariffTableResponse dto = new TariffTableResponse();
-            dto.id = table.getId();
-            dto.name = table.getName();
-            dto.validFrom = table.getValidFrom();
-            dto.validTo = table.getValidTo();
-
-            dto.categories = new ArrayList<>();
-
-            for (TariffCategory category : table.getCategories()) {
-
-                TariffTableResponse.Category catDto = new TariffTableResponse.Category();
-                catDto.category = category.getCategory().name();
-
-                catDto.ranges = new ArrayList<>();
-
-                for (ConsumptionRange range : category.getRanges()) {
-
-                    TariffTableResponse.Range rangeDto = new TariffTableResponse.Range();
-                    rangeDto.start = range.getRangeStart();
-                    rangeDto.end = range.getRangeEnd();
-                    rangeDto.unitPrice = range.getUnitPrice();
-
-                    catDto.ranges.add(rangeDto);
-                }
-
-                dto.categories.add(catDto);
-            }
-
-            response.add(dto);
-        }
-
-        return response;
+        return tariffTableService.findAll().stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @DeleteMapping("/{id}")
@@ -80,5 +42,26 @@ public class TariffTableController {
         tariffTableService.delete(id);
     }
 
+    private TariffTableResponse toResponse(TariffTable table) {
+        List<TariffTableResponse.Category> categories = table.getCategories().stream()
+                .map(cat -> new TariffTableResponse.Category(
+                        cat.getCategory().name(),
+                        cat.getRanges().stream()
+                                .map(r -> new TariffTableResponse.Range(
+                                        r.getRangeStart(),
+                                        r.getRangeEnd(),
+                                        r.getUnitPrice()
+                                ))
+                                .toList()
+                ))
+                .toList();
 
+        return new TariffTableResponse(
+                table.getId(),
+                table.getName(),
+                table.getValidFrom(),
+                table.getValidTo(),
+                categories
+        );
+    }
 }

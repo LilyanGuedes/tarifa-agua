@@ -30,8 +30,8 @@ public class TariffCalculationService {
 
     @Transactional(readOnly = true)
     public CalculationResponse calculate(CreateCalculationRequest request) {
-        ConsumerCategory categoria = request.getCategoria();
-        int consumoTotal = request.getConsumo();
+        ConsumerCategory categoria = request.categoria();
+        int consumoTotal = request.consumo();
 
         TariffTable tabelaVigente = findCurrentTable();
 
@@ -54,34 +54,17 @@ public class TariffCalculationService {
         for (ConsumptionRange faixa : faixas) {
             if (restante <= 0) break;
 
-            int inicio = faixa.getRangeStart();
-            int fim = faixa.getRangeEnd();
+            int capacidade = faixa.getRangeStart() == 0
+                    ? faixa.getRangeEnd()
+                    : faixa.getRangeEnd() - faixa.getRangeStart() + 1;
 
-            if (consumoTotal < inicio) {
-                break;
-            }
-
-            int consumidoAteAgora = consumoTotal - restante;
-
-            // a faixa 0..10 significa 1..10 em termos de unidades cobradas
-            int inicioCobrancaDaFaixa = (inicio == 0 ? 1 : inicio);
-
-            int inicioEfetivo = (consumidoAteAgora == 0)
-                    ? inicioCobrancaDaFaixa
-                    : Math.max(inicioCobrancaDaFaixa, consumidoAteAgora + 1);
-
-            if (inicioEfetivo > fim) {
-                continue;
-            }
-
-            int maxCobravelNessaFaixa = fim - inicioEfetivo + 1;
-            int m3Cobrados = Math.min(restante, maxCobravelNessaFaixa);
+            int m3Cobrados = Math.min(restante, capacidade);
 
             BigDecimal subtotal = faixa.getUnitPrice().multiply(BigDecimal.valueOf(m3Cobrados));
             total = total.add(subtotal);
 
             detalhamento.add(new CalculationResponse.RangeBreakdown(
-                    new CalculationResponse.Faixa(inicio, fim),
+                    new CalculationResponse.Faixa(faixa.getRangeStart(), faixa.getRangeEnd()),
                     m3Cobrados,
                     faixa.getUnitPrice(),
                     subtotal

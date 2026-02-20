@@ -26,9 +26,11 @@ class TariffTableValidatorTest {
 
     @Test
     void deveRejeitarVigenciaInvalida() {
-        CreateTariffTableRequest req = buildRequestCompleta();
-        req.setValidFrom(LocalDate.of(2025, 6, 1));
-        req.setValidTo(LocalDate.of(2025, 1, 1));
+        CreateTariffTableRequest req = buildRequest(
+                LocalDate.of(2025, 6, 1),
+                LocalDate.of(2025, 1, 1),
+                buildTodasCategorias()
+        );
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> validator.validate(req));
@@ -39,8 +41,10 @@ class TariffTableValidatorTest {
 
     @Test
     void deveRejeitarFaixasVazias() {
-        CreateTariffTableRequest req = buildRequestCompleta();
-        req.getCategories().get(0).setRanges(List.of());
+        List<CategoryRangesRequest> categorias = buildTodasCategorias();
+        categorias.set(0, new CategoryRangesRequest(categorias.get(0).category(), List.of()));
+
+        CreateTariffTableRequest req = buildRequest(categorias);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> validator.validate(req));
@@ -50,10 +54,12 @@ class TariffTableValidatorTest {
 
     @Test
     void deveRejeitarFaixaQueNaoComecaEmZero() {
-        CreateTariffTableRequest req = buildRequestCompleta();
-        req.getCategories().get(0).setRanges(List.of(
-                buildFaixa(5, 20, "3.00")
-        ));
+        List<CategoryRangesRequest> categorias = buildTodasCategorias();
+        categorias.set(0, new CategoryRangesRequest(categorias.get(0).category(), List.of(
+                new RangeRequest(5, 20, new BigDecimal("3.00"))
+        )));
+
+        CreateTariffTableRequest req = buildRequest(categorias);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> validator.validate(req));
@@ -63,24 +69,28 @@ class TariffTableValidatorTest {
 
     @Test
     void deveRejeitarFaixasComBuraco() {
-        CreateTariffTableRequest req = buildRequestCompleta();
-        req.getCategories().get(0).setRanges(List.of(
-                buildFaixa(0, 10, "1.00"),
-                buildFaixa(15, 30, "2.00") // buraco entre 11 e 14
-        ));
+        List<CategoryRangesRequest> categorias = buildTodasCategorias();
+        categorias.set(0, new CategoryRangesRequest(categorias.get(0).category(), List.of(
+                new RangeRequest(0, 10, new BigDecimal("1.00")),
+                new RangeRequest(15, 30, new BigDecimal("2.00")) // buraco entre 11 e 14
+        )));
+
+        CreateTariffTableRequest req = buildRequest(categorias);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> validator.validate(req));
 
-        assertTrue(ex.getReason().contains("contínuas"));
+        assertTrue(ex.getReason().contains("continuas"));
     }
 
     @Test
     void deveRejeitarIntervaloInvalido() {
-        CreateTariffTableRequest req = buildRequestCompleta();
-        req.getCategories().get(0).setRanges(List.of(
-                buildFaixa(0, 0, "1.00")
-        ));
+        List<CategoryRangesRequest> categorias = buildTodasCategorias();
+        categorias.set(0, new CategoryRangesRequest(categorias.get(0).category(), List.of(
+                new RangeRequest(0, 0, new BigDecimal("1.00"))
+        )));
+
+        CreateTariffTableRequest req = buildRequest(categorias);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> validator.validate(req));
@@ -90,10 +100,12 @@ class TariffTableValidatorTest {
 
     @Test
     void deveRejeitarPrecoNegativo() {
-        CreateTariffTableRequest req = buildRequestCompleta();
-        req.getCategories().get(0).setRanges(List.of(
-                buildFaixa(0, 10, "-1.00")
-        ));
+        List<CategoryRangesRequest> categorias = buildTodasCategorias();
+        categorias.set(0, new CategoryRangesRequest(categorias.get(0).category(), List.of(
+                new RangeRequest(0, 10, new BigDecimal("-1.00"))
+        )));
+
+        CreateTariffTableRequest req = buildRequest(categorias);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> validator.validate(req));
@@ -101,38 +113,50 @@ class TariffTableValidatorTest {
         assertTrue(ex.getReason().contains("valor unitário"));
     }
 
+    @Test
+    void deveRejeitarFaixasSemCoberturaSuficiente() {
+        List<CategoryRangesRequest> categorias = buildTodasCategorias();
+        categorias.set(0, new CategoryRangesRequest(categorias.get(0).category(), List.of(
+                new RangeRequest(0, 10, new BigDecimal("1.00")),
+                new RangeRequest(11, 100, new BigDecimal("2.00"))
+        )));
+
+        CreateTariffTableRequest req = buildRequest(categorias);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> validator.validate(req));
+
+        assertTrue(ex.getReason().contains("999999"));
+    }
+
 // métodos utilizados nos testes
 
     private CreateTariffTableRequest buildRequestCompleta() {
-        CreateTariffTableRequest req = new CreateTariffTableRequest();
-        req.setName("Tabela Teste");
-        req.setValidFrom(LocalDate.of(2025, 1, 1));
-        req.setValidTo(LocalDate.of(2025, 12, 31));
+        return buildRequest(buildTodasCategorias());
+    }
 
+    private CreateTariffTableRequest buildRequest(List<CategoryRangesRequest> categorias) {
+        return new CreateTariffTableRequest(
+                "Tabela Teste",
+                LocalDate.of(2025, 1, 1),
+                LocalDate.of(2025, 12, 31),
+                categorias
+        );
+    }
+
+    private CreateTariffTableRequest buildRequest(LocalDate validFrom, LocalDate validTo, List<CategoryRangesRequest> categorias) {
+        return new CreateTariffTableRequest("Tabela Teste", validFrom, validTo, categorias);
+    }
+
+    private List<CategoryRangesRequest> buildTodasCategorias() {
         List<CategoryRangesRequest> categorias = new ArrayList<>();
         for (ConsumerCategory cat : ConsumerCategory.values()) {
-            categorias.add(buildCategoria(cat));
+            categorias.add(new CategoryRangesRequest(cat, List.of(
+                    new RangeRequest(0, 10, new BigDecimal("2.50")),
+                    new RangeRequest(11, 20, new BigDecimal("4.00")),
+                    new RangeRequest(21, 999999, new BigDecimal("6.00"))
+            )));
         }
-        req.setCategories(categorias);
-        return req;
-    }
-
-    private CategoryRangesRequest buildCategoria(ConsumerCategory cat) {
-        CategoryRangesRequest c = new CategoryRangesRequest();
-        c.setCategory(cat);
-        c.setRanges(List.of(
-                buildFaixa(0, 10, "2.50"),
-                buildFaixa(11, 20, "4.00"),
-                buildFaixa(21, 99999, "6.00")
-        ));
-        return c;
-    }
-
-    private RangeRequest buildFaixa(int start, int end, String preco) {
-        RangeRequest r = new RangeRequest();
-        r.setStart(start);
-        r.setEnd(end);
-        r.setUnitPrice(new BigDecimal(preco));
-        return r;
+        return categorias;
     }
 }

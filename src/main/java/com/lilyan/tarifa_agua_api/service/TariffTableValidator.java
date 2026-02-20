@@ -13,15 +13,17 @@ import java.util.*;
 @Component
 class TariffTableValidator {
 
+    private static final int COBERTURA_MINIMA = 99999;
+
     void validate(CreateTariffTableRequest req) {
         validarVigencia(req);
-        validarCategorias(req.getCategories());
-        validarFaixasPorCategoria(req.getCategories());
+        validarCategorias(req.categories());
+        validarFaixasPorCategoria(req.categories());
     }
 
     private void validarVigencia(CreateTariffTableRequest req) {
-        if (req.getValidFrom() != null && req.getValidTo() != null &&
-                req.getValidFrom().isAfter(req.getValidTo())) {
+        if (req.validFrom() != null && req.validTo() != null &&
+                req.validFrom().isAfter(req.validTo())) {
             throw erro("A data inicial de vigência deve ser menor ou igual a data final.");
         }
     }
@@ -30,8 +32,8 @@ class TariffTableValidator {
         Set<ConsumerCategory> set = new HashSet<>();
 
         for (CategoryRangesRequest c : categorias) {
-            if (!set.add(c.getCategory())) {
-                throw erro("Categoria " + c.getCategory() + " repetida na requisiçao.");
+            if (!set.add(c.category())) {
+                throw erro("Categoria " + c.category() + " repetida na requisiçao.");
             }
         }
 
@@ -45,7 +47,7 @@ class TariffTableValidator {
 
     private void validarFaixasPorCategoria(List<CategoryRangesRequest> categorias) {
         for (CategoryRangesRequest c : categorias) {
-            validarFaixas(c.getCategory(), c.getRanges());
+            validarFaixas(c.category(), c.ranges());
         }
     }
 
@@ -55,39 +57,43 @@ class TariffTableValidator {
         }
 
         List<RangeRequest> sortedRanges = new ArrayList<>(faixas);
-        sortedRanges.sort(Comparator.comparingInt(RangeRequest::getStart));
+        sortedRanges.sort(Comparator.comparingInt(RangeRequest::start));
 
-        if (!Objects.equals(sortedRanges.get(0).getStart(), 0)) {
+        if (!Objects.equals(sortedRanges.get(0).start(), 0)) {
             throw erro("A primeira faixa deve iniciar em 0 m³ para a categoria: " + categoria);
         }
 
         int nextStart = 0;
 
         for (RangeRequest f : sortedRanges) {
-            Integer start = f.getStart();
-            Integer end = f.getEnd();
+            Integer start = f.start();
+            Integer end = f.end();
 
             if (start == null || end == null) {
-                throw erro("Faixa inválida informada para a categoria: " + categoria);
+                throw erro("Faixa invalida informada para a categoria: " + categoria);
             }
 
             if (start < 0 || start >= end) {
-                throw erro("Intervalo inválido [" + start + "-" + end + "] para a categoria: " + categoria);
+                throw erro("Intervalo invalido [" + start + "-" + end + "] para a categoria: " + categoria);
             }
 
             if (!Objects.equals(start, nextStart)) {
-                throw erro("As faixas devem ser contínuas para a categoria " + categoria +
+                throw erro("As faixas devem ser continuas para a categoria " + categoria +
                         " (esperado início " + nextStart + ", informado " + start + ").");
             }
 
-            if (f.getUnitPrice() == null || f.getUnitPrice().signum() < 0) {
+            if (f.unitPrice() == null || f.unitPrice().signum() < 0) {
                 throw erro("O valor unitário deve ser maior ou igual a zero para a categoria: " + categoria);
             }
 
             nextStart = end + 1;
         }
 
-        // verificar novamente sobre cobertura suficiente
+        int maiorFim = sortedRanges.get(sortedRanges.size() - 1).end();
+        if (maiorFim < COBERTURA_MINIMA) {
+            throw erro("A última faixa deve cobrir até pelo menos " + COBERTURA_MINIMA +
+                    " m³ para a categoria: " + categoria);
+        }
     }
 
     private ResponseStatusException erro(String mensagem) {
