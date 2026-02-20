@@ -126,7 +126,7 @@ class TariffTableValidatorTest {
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> validator.validate(req));
 
-        assertTrue(ex.getReason().contains("999999"));
+        assertTrue(ex.getReason().contains("99999"));
     }
 
 // métodos utilizados nos testes
@@ -154,7 +154,7 @@ class TariffTableValidatorTest {
             categorias.add(new CategoryRangesRequest(cat, List.of(
                     new RangeRequest(0, 10, new BigDecimal("2.50")),
                     new RangeRequest(11, 20, new BigDecimal("4.00")),
-                    new RangeRequest(21, 999999, new BigDecimal("6.00"))
+                    new RangeRequest(21, 99999, new BigDecimal("6.00"))
             )));
         }
         return categorias;

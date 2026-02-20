@@ -145,7 +145,7 @@ class TariffCalculationServiceTest {
         assertTrue(ex.getReason().contains("não cobrem"));
     }
 
-    // métodos utilizados nos testes
+    // método utilizado nos testes
 
     private TariffTable buildTabela(ConsumerCategory categoria, Object... faixas) {
         TariffTable tabela = new TariffTable("Teste", null, null);
