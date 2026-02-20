@@ -132,6 +132,7 @@ Define uma faixa de consumo em m3 com seu valor unitario.
 **Regras das faixas:**
 - Devem comecar em 0 m3
 - Devem ser continuas (sem buracos entre faixas)
+- O rangeEnd da última faixa da categoria deve ser maior ou igual a 99999 m3
 - Nao podem se sobrepor (garantido por constraint `EXCLUDE` no banco)
 - O valor unitario deve ser >= 0
 
