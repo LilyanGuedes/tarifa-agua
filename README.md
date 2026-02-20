@@ -137,11 +137,11 @@ Define uma faixa de consumo em m3 com seu valor unitario.
 
 ## Logica de calculo
 
-O calculo da conta de agua funciona por **faixas progressivas**, similar ao imposto de renda. O consumo e distribuido entre as faixas da menor para a maior, e cada m3 e cobrado pelo valor da faixa correspondente.
+O calculo da conta de agua funciona por **faixas progressivas**, similar ao imposto de renda. O consumo é distribuido entre as faixas da menor para a maior, e cada m3 e cobrado pelo valor da faixa correspondente.
 
 ### Como o codigo funciona
 
-A classe `TariffCalculationService` e responsavel por todo o calculo. O fluxo funciona assim:
+A classe `TariffCalculationService` é responsavel por todo o calculo. O fluxo funciona assim:
 
 **1. Buscar a tabela vigente**
 
@@ -149,7 +149,7 @@ O metodo `findCurrentTable()` consulta o repositorio passando `LocalDate.now()` 
 
 **2. Localizar a categoria**
 
-Usando o metodo `findCategory()` da propria entidade `TariffTable`, busca a categoria informada na requisicao (ex: `INDUSTRIAL`). Isso evita uma query extra no banco — a busca e feita em memoria na lista de categorias ja carregada.
+Usando o metodo `findCategory()` da propria entidade `TariffTable`, busca a categoria informada na requisicao (ex: `INDUSTRIAL`). Isso evita uma query extra no banco — a busca é feita em memoria na lista de categorias ja carregada.
 
 
 **3. Iterar pelas faixas com acumulador**
@@ -220,7 +220,7 @@ Cria uma nova tabela tarifaria. Deve conter as 4 categorias obrigatorias.
       "ranges": [
         { "start": 0,  "end": 10,    "unitPrice": 2.50 },
         { "start": 11, "end": 20,    "unitPrice": 4.00 },
-        { "start": 21, "end": 999999, "unitPrice": 6.00 }
+        { "start": 21, "end": 99999, "unitPrice": 6.00 }
       ]
     },
     {
@@ -228,7 +228,7 @@ Cria uma nova tabela tarifaria. Deve conter as 4 categorias obrigatorias.
       "ranges": [
         { "start": 0,  "end": 10,    "unitPrice": 3.00 },
         { "start": 11, "end": 20,    "unitPrice": 5.00 },
-        { "start": 21, "end": 999999, "unitPrice": 7.50 }
+        { "start": 21, "end": 99999, "unitPrice": 7.50 }
       ]
     },
     {
@@ -236,7 +236,7 @@ Cria uma nova tabela tarifaria. Deve conter as 4 categorias obrigatorias.
       "ranges": [
         { "start": 0,  "end": 10,    "unitPrice": 4.00 },
         { "start": 11, "end": 20,    "unitPrice": 6.50 },
-        { "start": 21, "end": 999999, "unitPrice": 9.00 }
+        { "start": 21, "end": 99999, "unitPrice": 9.00 }
       ]
     },
     {
@@ -244,7 +244,7 @@ Cria uma nova tabela tarifaria. Deve conter as 4 categorias obrigatorias.
       "ranges": [
         { "start": 0,  "end": 10,    "unitPrice": 1.50 },
         { "start": 11, "end": 20,    "unitPrice": 2.50 },
-        { "start": 21, "end": 999999, "unitPrice": 4.00 }
+        { "start": 21, "end": 99999, "unitPrice": 4.00 }
       ]
     }
   ]
@@ -279,7 +279,7 @@ Lista todas as tabelas tarifarias ativas com suas categorias e faixas.
         "ranges": [
           { "start": 0,  "end": 10,    "unitPrice": 2.50 },
           { "start": 11, "end": 20,    "unitPrice": 4.00 },
-          { "start": 21, "end": 999999, "unitPrice": 6.00 }
+          { "start": 21, "end": 99999, "unitPrice": 6.00 }
         ]
       }
     ]
